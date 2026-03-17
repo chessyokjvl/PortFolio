@@ -7,17 +7,11 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background-color: #f4f7f6; font-family: 'Sarabun', sans-serif; }
-        
-        /* สไตล์สำหรับกล่อง Login */
         .login-wrapper { height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .login-box { background: #fff; padding: 40px 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
-        
-        /* สไตล์สำหรับแอปพลิเคชัน */
         .portfolio-img { height: 200px; object-fit: cover; width: 100%; border-radius: 8px 8px 0 0; }
         .card { box-shadow: 0 4px 8px rgba(0,0,0,0.05); border: none; border-radius: 8px; margin-bottom: 20px; transition: transform 0.2s; }
         .card:hover { transform: translateY(-5px); }
-        
-        /* จัดการ Navbar ให้ไม่ล้นจอ */
         .navbar-brand { font-weight: bold; }
     </style>
 </head>
@@ -27,19 +21,14 @@
     <div class="login-box">
         <h3 class="mb-4 text-primary">Portfolio System</h3>
         <p class="text-muted mb-4">เข้าสู่ระบบเพื่อจัดการแฟ้มผลงาน</p>
-        
         <div class="mb-3 text-start">
             <label class="form-label text-muted small">รหัสผ่าน Admin</label>
             <input type="password" id="adminPassword" class="form-control form-control-lg" placeholder="ใส่รหัสผ่าน..." onkeypress="handleEnter(event)">
         </div>
-        
         <button class="btn btn-primary btn-lg w-100 mb-3" onclick="login('ADMIN')">เข้าสู่ระบบ (Admin)</button>
-        
         <div class="position-relative mb-3">
-            <hr>
-            <span class="position-absolute top-50 start-50 translate-middle bg-white px-2 text-muted small">หรือ</span>
+            <hr><span class="position-absolute top-50 start-50 translate-middle bg-white px-2 text-muted small">หรือ</span>
         </div>
-        
         <button class="btn btn-outline-secondary w-100" onclick="login('GUEST')">เข้าชมแบบ Guest</button>
     </div>
 </div>
@@ -60,7 +49,6 @@
             <h4>ผลงานทั้งหมด</h4>
             <button id="addBtn" class="btn btn-primary d-none" onclick="openModal('ADD')">+ เพิ่มผลงานใหม่</button>
         </div>
-
         <div class="row" id="portfolioContainer">
             <div class="col-12 text-center text-muted">กรุณารอสักครู่...</div>
         </div>
@@ -88,12 +76,17 @@
             </div>
             <div class="mb-3">
                 <label class="form-label">หมวดหมู่</label>
-                <input list="categoryOptions" class="form-control" id="category" placeholder="เลือกหรือพิมพ์ประเภทใหม่..." required>
-                <datalist id="categoryOptions"></datalist>
+                <select class="form-select" id="category" required>
+                    <option value="" disabled selected>-- เลือกหมวดหมู่ --</option>
+                </select>
             </div>
             <div class="mb-3">
-                <label class="form-label">URL รูปภาพ</label>
-                <input type="url" class="form-control" id="imageUrl" placeholder="วางลิงก์รูปภาพที่นี่" required>
+                <label class="form-label">URL รูปภาพหน้าปก</label>
+                <input type="url" class="form-control" id="imageUrl" placeholder="ลิงก์รูปภาพ (จำเป็น)" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">URL ไฟล์ PDF (ถ้ามี)</label>
+                <input type="url" class="form-control" id="pdfUrl" placeholder="ลิงก์ไฟล์ PDF จาก Google Drive">
             </div>
             <div class="mb-3">
                 <label class="form-label">รายละเอียด</label>
@@ -111,25 +104,21 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // 🔴 นำ Web App URL ของคุณมาใส่ตรงนี้
-    const scriptUrl = 'https://script.google.com/macros/s/AKfycbwUh4vdlIEuz5_wSjup5yx4zaPW5jZiitkrfDVkqYjKLVGcE8iHaB0kDizgl1ITpOozsw/exec';
+    // 🔴 นำ Web App URL มาใส่ตรงนี้
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbzsOhJ-HJsWsrFCJMmKaB-X_I2KK_mxHTkm5XCVJK5X3FEke0gNHg0JKiaoQZyG5k0u4g/exec';
     
     let portfolioData = [];
+    let categoriesList = [];
     let currentRole = 'GUEST';
     const myModal = new bootstrap.Modal(document.getElementById('portfolioModal'));
 
-    // ฟังก์ชันกด Enter เพื่อ Login
     function handleEnter(event) {
-        if (event.key === 'Enter') {
-            login('ADMIN');
-        }
+        if (event.key === 'Enter') login('ADMIN');
     }
 
-    // ฟังก์ชันจัดการ Login
     function login(role) {
         if (role === 'ADMIN') {
             const pass = document.getElementById('adminPassword').value;
-            // ตรวจสอบรหัสผ่านโดยให้เป็น String อย่างเคร่งครัด
             if (pass !== "1591") {
                 alert("รหัสผ่านไม่ถูกต้อง");
                 return;
@@ -144,14 +133,11 @@
             document.getElementById('userRoleBadge').innerText = 'Guest';
             document.getElementById('addBtn').classList.add('d-none');
         }
-
-        // สลับหน้าจอ
         document.getElementById('loginSection').classList.add('d-none');
         document.getElementById('appSection').classList.remove('d-none');
         fetchData();
     }
 
-    // ฟังก์ชันออกจากระบบ
     function logout() {
         document.getElementById('adminPassword').value = '';
         document.getElementById('appSection').classList.add('d-none');
@@ -159,29 +145,29 @@
         document.getElementById('portfolioContainer').innerHTML = '<div class="col-12 text-center text-muted">กรุณารอสักครู่...</div>';
     }
 
-    // ดึงข้อมูลจาก Google Sheet
     function fetchData() {
         fetch(scriptUrl)
             .then(response => response.json())
             .then(data => {
-                portfolioData = data;
-                updateCategoryDatalist();
+                // แยกข้อมูลผลงาน และ ข้อมูลหมวดหมู่
+                portfolioData = data.portfolio || [];
+                categoriesList = data.categories || [];
+                
+                updateCategoryDropdown();
                 renderData();
             })
             .catch(error => console.error('Error:', error));
     }
 
-    // อัพเดทตัวเลือกหมวดหมู่ให้เลือกใน UI ได้อัตโนมัติ
-    function updateCategoryDatalist() {
-        const categories = [...new Set(portfolioData.map(item => item.category))];
-        const datalist = document.getElementById('categoryOptions');
-        datalist.innerHTML = '';
-        categories.forEach(cat => {
-            if (cat) datalist.innerHTML += `<option value="${cat}">`;
+    // อัปเดต Dropdown ใน Modal ให้ดึงค่ามาจาก Sheet Categories
+    function updateCategoryDropdown() {
+        const select = document.getElementById('category');
+        select.innerHTML = '<option value="" disabled selected>-- เลือกหมวดหมู่ --</option>';
+        categoriesList.forEach(cat => {
+            select.innerHTML += `<option value="${cat}">${cat}</option>`;
         });
     }
 
-    // แสดงผล Card ผลงาน
     function renderData() {
         const container = document.getElementById('portfolioContainer');
         container.innerHTML = '';
@@ -192,7 +178,9 @@
         }
 
         portfolioData.reverse().forEach(item => {
-            // ซ่อนปุ่มแก้ไข/ลบ ถ้าเป็น Guest
+            // เช็คว่ามีลิงก์ PDF ไหม ถ้ามีให้แสดงปุ่ม
+            const pdfButton = item.pdfUrl ? `<a href="${item.pdfUrl}" target="_blank" class="btn btn-sm btn-outline-info w-100 mb-2">📄 เปิดดูเอกสาร PDF</a>` : '';
+            
             const actionButtons = currentRole === 'ADMIN' ? `
                 <hr>
                 <div class="d-flex justify-content-between">
@@ -213,6 +201,7 @@
                             <p class="card-text small">${item.description}</p>
                         </div>
                         <div class="mt-auto">
+                            ${pdfButton}
                             ${actionButtons}
                         </div>
                     </div>
@@ -222,7 +211,6 @@
         });
     }
 
-    // เปิด Modal สำหรับเพิ่มหรือแก้ไข
     function openModal(action, id = '') {
         document.getElementById('actionType').value = action;
         document.getElementById('portfolioForm').reset();
@@ -236,6 +224,7 @@
                 document.getElementById('date').value = item.date;
                 document.getElementById('category').value = item.category;
                 document.getElementById('imageUrl').value = item.imageUrl;
+                document.getElementById('pdfUrl').value = item.pdfUrl || '';
                 document.getElementById('description').value = item.description;
             }
         } else {
@@ -244,9 +233,7 @@
         myModal.show();
     }
 
-    // บันทึกข้อมูล
     function saveData() {
-        // ตรวจสอบความถูกต้องของ Form
         const form = document.getElementById('portfolioForm');
         if (!form.checkValidity()) {
             form.reportValidity();
@@ -260,6 +247,7 @@
             date: document.getElementById('date').value,
             category: document.getElementById('category').value,
             imageUrl: document.getElementById('imageUrl').value,
+            pdfUrl: document.getElementById('pdfUrl').value, // ส่งค่า PDF ไปด้วย
             description: document.getElementById('description').value
         };
 
@@ -282,7 +270,6 @@
         });
     }
 
-    // ลบข้อมูล
     function deleteData(id) {
         if(confirm('คุณแน่ใจหรือไม่ว่าต้องการลบผลงานชิ้นนี้?')) {
             const payload = { action: 'DELETE', id: id };
